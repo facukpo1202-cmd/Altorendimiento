@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard de Perfiles Deportivos</title>
+    <link rel="stylesheet" href="./styles.css?v=12" />
+  </head>
+  <body>
+    <section class="access-screen" id="accessScreen">
+      <div class="access-hero">
+        <p class="eyebrow">Central Norte | Control del rendimiento</p>
+        <h1>Ingreso al perfil deportivo</h1>
+        <p>
+          El alumno entra con su Gmail y contraseña para ver su perfil. El profe ingresa como administrador para controlar la base.
+        </p>
+      </div>
+
+      <div class="access-grid">
+        <form class="access-card" id="studentAccessForm">
+          <p class="eyebrow">Alumno</p>
+          <h2>Ver mi perfil</h2>
+          <label>
+            Gmail
+            <input name="email" type="email" autocomplete="email" placeholder="alumno@gmail.com" required />
+          </label>
+          <label>
+            Contraseña
+            <input name="password" type="password" autocomplete="current-password" required />
+          </label>
+          <label>
+            WhatsApp de contacto
+            <input name="whatsapp" inputmode="tel" placeholder="Opcional: 5493870000000" />
+          </label>
+          <button class="button primary" type="submit">Ingresar como alumno</button>
+          <p class="access-note" id="studentAccessNote"></p>
+        </form>
+
+        <form class="access-card admin-access" id="adminAccessForm">
+          <p class="eyebrow">Administrador</p>
+          <h2>Control del profe</h2>
+          <label>
+            Clave admin
+            <input name="adminCode" type="password" autocomplete="current-password" required />
+          </label>
+          <button class="button ghost" type="submit">Entrar como admin</button>
+          <p class="access-note" id="adminAccessNote"></p>
+        </form>
+      </div>
+    </section>
+
+    <header class="topbar hidden" id="appTopbar">
+      <div>
+        <p class="eyebrow">Central Norte | Control del rendimiento</p>
+        <h1>Dashboard de perfiles deportivos</h1>
+      </div>
+      <div class="toolbar" aria-label="Acciones del dashboard">
+        <span class="session-pill" id="sessionLabel"></span>
+        <button class="button ghost admin-action" id="importJsonButton" type="button">Importar</button>
+        <button class="button ghost admin-action" id="exportCsvButton" type="button">CSV</button>
+        <button class="button ghost admin-action" id="exportJsonButton" type="button">JSON</button>
+        <button class="button primary admin-action" id="newProfileButton" type="button">Nuevo perfil</button>
+        <button class="button ghost" id="logoutButton" type="button">Salir</button>
+      </div>
+      <input id="jsonFileInput" type="file" accept="application/json" hidden />
+    </header>
+
+    <main class="layout hidden" id="appShell">
+      <aside class="filters" aria-label="Filtros">
+        <div class="filter-group">
+          <label for="searchInput">Buscar</label>
+          <input id="searchInput" type="search" placeholder="Nombre, club, posición..." />
+        </div>
+        <div class="filter-group">
+          <label for="categoryFilter">Categoría</label>
+          <select id="categoryFilter"></select>
+        </div>
+        <div class="filter-group">
+          <label for="positionFilter">Posición</label>
+          <select id="positionFilter"></select>
+        </div>
+        <div class="filter-group">
+          <label for="statusFilter">Estado</label>
+          <select id="statusFilter"></select>
+        </div>
+        <button class="button reset" id="resetFiltersButton" type="button">Limpiar filtros</button>
+        <button class="link-button" id="restoreSeedButton" type="button">Restaurar datos iniciales</button>
+        <div id="adminRequests" class="admin-requests"></div>
+      </aside>
+
+      <section class="dashboard" aria-live="polite">
+        <section class="summary-band">
+          <div>
+            <p class="eyebrow">Vista general</p>
+            <h2>Seguimiento integral</h2>
+          </div>
+          <p class="summary-copy">
+            Perfiles activos, estado corporal, carga de seguimiento y alertas principales.
+          </p>
+        </section>
+
+        <section class="kpi-grid" id="kpiGrid" aria-label="Indicadores clave"></section>
+
+        <section class="analytics-grid" aria-label="Análisis">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Perfiles por posición</h3>
+              <span id="positionTotal" class="pill">0 perfiles</span>
+            </div>
+            <div id="positionBars" class="bars"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Categorías</h3>
+              <span id="categoryTotal" class="pill">Sin datos</span>
+            </div>
+            <div class="donut-row">
+              <div id="categoryDonut" class="donut" aria-hidden="true"></div>
+              <div id="categoryLegend" class="legend"></div>
+            </div>
+          </div>
+
+          <div class="panel wide">
+            <div class="panel-head">
+              <h3>Distribución de IMC</h3>
+              <span class="pill">Actualizable</span>
+            </div>
+            <div id="bmiScale" class="bmi-scale"></div>
+          </div>
+        </section>
+
+        <section class="profiles-section">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Base editable</p>
+              <h2>Perfiles cargados</h2>
+            </div>
+            <span id="resultCount" class="result-count">0 resultados</span>
+          </div>
+          <div id="profileList" class="profile-list"></div>
+        </section>
+      </section>
+
+      <aside class="detail" id="detailPane" aria-label="Detalle del perfil"></aside>
+    </main>
+
+    <dialog id="profileDialog" class="dialog">
+      <form id="profileForm" method="dialog">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow">Carga de perfil</p>
+            <h2 id="dialogTitle">Nuevo perfil</h2>
+          </div>
+          <button class="icon-button" id="closeDialogButton" type="button" aria-label="Cerrar">x</button>
+        </div>
+
+        <div class="form-grid">
+          <label>
+            Nombre completo
+            <input name="name" required autocomplete="name" />
+          </label>
+          <label>
+            Gmail del alumno
+            <input name="email" type="email" autocomplete="email" />
+          </label>
+          <label>
+            WhatsApp del alumno
+            <input name="whatsapp" inputmode="tel" />
+          </label>
+          <label class="span-2">
+            Link del plan de entrenamiento
+            <input name="trainingPlanUrl" type="url" placeholder="https://..." />
+          </label>
+          <label>
+            Fecha de evaluación
+            <input name="evaluationDate" type="date" />
+          </label>
+          <label>
+            Fecha de nacimiento
+            <input name="birthDate" type="date" />
+          </label>
+          <label>
+            Edad
+            <input name="age" inputmode="numeric" />
+          </label>
+          <label>
+            Deporte
+            <input name="sport" />
+          </label>
+          <label>
+            Posición
+            <input name="position" />
+          </label>
+          <label>
+            Categoría
+            <input name="category" />
+          </label>
+          <label>
+            Club / equipo
+            <input name="club" />
+          </label>
+          <label>
+            Pierna dominante
+            <select name="dominantLeg">
+              <option value="">Sin definir</option>
+              <option>Derecha</option>
+              <option>Izquierda</option>
+              <option>Ambas</option>
+            </select>
+          </label>
+          <label>
+            Profe responsable
+            <input name="coach" />
+          </label>
+          <label>
+            Estatura (cm)
+            <input name="heightCm" inputmode="decimal" />
+          </label>
+          <label>
+            Peso (kg)
+            <input name="weightKg" inputmode="decimal" />
+          </label>
+          <label>
+            Sueño promedio (h)
+            <input name="sleepHours" inputmode="decimal" />
+          </label>
+          <label>
+            Dolor actual (0-10)
+            <input name="pain" inputmode="numeric" />
+          </label>
+          <label>
+            Estrés (0-10)
+            <input name="stress" inputmode="numeric" />
+          </label>
+          <label>
+            Motivación (1-10)
+            <input name="motivation" inputmode="numeric" />
+          </label>
+          <label class="span-2">
+            Objetivo principal
+            <textarea name="objective" rows="3"></textarea>
+          </label>
+          <label class="span-2">
+            Lesiones / antecedentes
+            <textarea name="injuries" rows="2"></textarea>
+          </label>
+          <label class="span-2">
+            Alertas / restricciones
+            <textarea name="restrictions" rows="2"></textarea>
+          </label>
+          <label class="span-2">
+            Disponibilidad semanal
+            <textarea name="availability" rows="2"></textarea>
+          </label>
+          <label class="span-2">
+            Observación del profe
+            <textarea name="coachNote" rows="3"></textarea>
+          </label>
+        </div>
+
+        <div class="bmi-preview" id="bmiPreview">IMC pendiente</div>
+
+        <div class="dialog-actions">
+          <button class="button ghost" id="cancelFormButton" type="button">Cancelar</button>
+          <button class="button primary" type="submit">Guardar perfil</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="./app.js?v=12"></script>
+  </body>
+</html>
